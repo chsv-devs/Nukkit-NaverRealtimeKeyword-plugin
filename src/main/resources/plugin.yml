@@ -1,0 +1,16 @@
+name : NaverRealtimeKeyword
+main : hancho.plugin.nukkit.naverRealtimeKeyword.NaverRealtimeKeyword
+version: 1.0.0
+api : [1.0.0]
+author: Hancho
+
+commands:
+  실검위치:
+    description: 실검 표시 위치를 변경합니다
+    permission: "op"
+  실검청소:
+    description: 모든 실검 엔티티를 제거한 후 다시 스폰합니다.
+    permission: "op"
+  실검도박:
+    description: 실시간 검색어를 이용하여 도박을 해보세요.
+    permission: "true"
