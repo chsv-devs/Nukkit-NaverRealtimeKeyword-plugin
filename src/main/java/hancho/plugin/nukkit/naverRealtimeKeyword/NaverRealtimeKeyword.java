@@ -171,7 +171,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                                 }
                                 this.inputPrice.remove(uuid);
                             }
-                            this.getServer().broadcastMessage("§o§b[ §f실검도박 §b] §f총 §b" + list.size() + "§f명이 키워드 \"" + keyword + "\" (으)로 도박에 성공하셨습니다.");
+                            this.getServer().broadcastMessage("§o§b[ §f실검도박 §b] §f총 §b" + list.size() + "§f명이 키워드 \"" + keyword + "\" (으)로 도박에 §b" + changedValue + "§f배로 성공하셨습니다.");
                         }else{ //패
                             for(UUID uuid : list) {
                                 Optional<Player> player = this.getServer().getPlayer(uuid);
@@ -202,7 +202,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         for(String keyword : keySet){
             if(!nowRank.contains(keyword)) {
                 ArrayList<UUID> list = this.stocks.get(keyword);
-                if (list != null) {
+                if (list != null) {  // :\
                     int changedValue = Math.abs(21 - this.rank.get(keyword));
                     for (UUID uuid : list) {
                         Optional<Player> player = this.getServer().getPlayer(uuid);
@@ -331,6 +331,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                     player.sendMessage("§f[§c ! §f] §f보유 금액이 입력한 금액의 1.5배보다 작아 취소되었습니다.");
                     return;
                 }
+                this.getLogger().info(player.getName() + "님이 키워드 \"" + this.selectedKeyWord.get(player.getName()) + "\" 키워드에 " + price + "원을 입력했습니다.");
                 this.inputPrice.put(player.getUniqueId(), price);
                 ArrayList<UUID> list = this.stocks.getOrDefault(keyword, new ArrayList<>());
                 list.add(player.getUniqueId());
@@ -376,5 +377,6 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         elements.add(new ElementInput("가격"));
         FormWindowCustom form = new FormWindowCustom("", elements);
         player.showFormWindow(form, CHECK_FORM);
+        this.getLogger().info(player.getName() + "님이 선택한 키워드 : " + this.selectedKeyWord.get(player.getName()));
     }
 }
