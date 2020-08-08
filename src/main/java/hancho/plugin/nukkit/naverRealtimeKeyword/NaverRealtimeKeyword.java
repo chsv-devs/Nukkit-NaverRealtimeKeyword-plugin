@@ -237,7 +237,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         URL url;
         String line;
         try {
-            url = new URL("https://apis.naver.com/mobile_main/srchrank/srchrank?frm=main&ag=10s&gr=4&ma=2&si=2&en=2&sp=2");
+            url = new URL("https://apis.naver.com/mobile_main/srchrank/srchrank?frm=main&ag=all&gr=1&ma=-2&si=0&en=0&sp=0");
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
