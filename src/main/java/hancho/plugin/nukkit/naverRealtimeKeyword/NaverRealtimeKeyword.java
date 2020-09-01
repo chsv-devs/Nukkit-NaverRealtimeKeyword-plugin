@@ -17,6 +17,7 @@ import cn.nukkit.form.response.FormResponseSimple;
 import cn.nukkit.form.window.FormWindowCustom;
 import cn.nukkit.form.window.FormWindowModal;
 import cn.nukkit.form.window.FormWindowSimple;
+import cn.nukkit.level.Level;
 import cn.nukkit.level.Location;
 import cn.nukkit.level.Sound;
 import cn.nukkit.plugin.PluginBase;
@@ -32,11 +33,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class NaverRealtimeKeyword extends PluginBase implements Listener {
     public static final int MAIN_FORM = 236814;
     public static final int CHECK_FORM = MAIN_FORM +1;
+    public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd일 HH시 mm분");
     public JsonArray realtimeData;
     public LinkedHashMap<String, Integer> rank;
     public Entity entity;
@@ -78,7 +81,6 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
     public void onEnable() {
         Entity.registerEntity("realtimeKeyword", MainEntity.class);
         this.saveDefaultConfig();
-        this.spawn();
         this.economyAPI = (EconomyAPI) this.getServer().getPluginManager().getPlugin("EconomyAPI");
         this.mailBox = (mailbox) this.getServer().getPluginManager().getPlugin("mailbox");
         this.getServer().getScheduler().scheduleRepeatingTask(this, this::check, 20 * 60, true);
@@ -88,11 +90,12 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
     @Override
     public void onDisable() {
         this.killEntity();
+        this.killAll();
     }
 
     public void killEntity(){
         if(this.entity != null){
-            if(!this.entity.chunk.isLoaded()){
+            if(!this.entity.getChunk().isLoaded()){
                 try {
                     this.entity.chunk.load();
                 } catch (IOException e) {
@@ -102,10 +105,12 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
             this.entity.kill();
             this.entity.close();
         }
-        if(this.getConfig().exists("loc")){
-            Location location = this.stringToLoc(this.getConfig().getString("loc"));
-            for(Entity entity : location.getLevel().getEntities()){
-                if(entity instanceof MainEntity){
+    }
+
+    public void killAll(){
+        for (Level level : this.getServer().getLevels().values()) {
+            for (Entity entity : level.getEntities()) {
+                if (entity instanceof MainEntity) {
                     entity.kill();
                     entity.close();
                 }
@@ -118,9 +123,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         Entity spawnedEntity;
         if(this.getConfig().exists("loc")){
             locKey = this.getConfig().getString("loc");
-            if(this.entity != null){
-                this.killEntity();
-            }
+            this.killEntity();
             Location location = this.stringToLoc(locKey);
             spawnedEntity = Entity.createEntity("realtimeKeyword", location );
             spawnedEntity.setNameTagVisible();
@@ -136,7 +139,8 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         if(this.entity == null || this.realtimeData == null) return;
 
         HashSet<String> nowRank = new HashSet<>();
-        String name = "§o§a[ §f네이버 실시간 검색어 §a]";
+        String name = "§o§a[ §f네이버 실시간 검색어 §a]" +
+                "\n§7" + DATE_FORMAT.format(System.currentTimeMillis()) + "\n";
         int rank = 1;
 
         for(JsonElement element : this.realtimeData){
@@ -153,8 +157,9 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                     name += " " + (oldRank > rank ? "§b↑§f" : "§c↓§f") + Math.abs(rank - oldRank);
                     ArrayList<UUID> list = this.stocks.get(keyword);
                     if(list != null){
-                        int changedValue = Math.abs(rank - oldRank);
+                        int changedValueAbs = Math.abs(rank - oldRank);
                         if(oldRank > rank){ //승
+                            double changedValue = changedValueAbs;
                             for(UUID uuid : list) {
                                 Optional<Player> player = this.getServer().getPlayer(uuid);
                                 if (this.economyAPI.myMoney(uuid) < this.inputPrice.get(uuid)){
@@ -173,12 +178,13 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                             }
                             this.getServer().broadcastMessage("§o§b[ §f실검도박 §b] §f총 §b" + list.size() + "§f명이 키워드 \"" + keyword + "\" (으)로 도박에 §b" + changedValue + "§f배로 성공하셨습니다.");
                         }else{ //패
+                            double changedValue = changedValueAbs == 1 ? 1.5 : changedValueAbs;
                             for(UUID uuid : list) {
                                 Optional<Player> player = this.getServer().getPlayer(uuid);
                                 if (this.economyAPI.myMoney(uuid) < this.inputPrice.get(uuid)){
                                     this.getServer().getLogger().warning(uuid.toString() + "님이 돈 " + this.economyAPI.myMoney(uuid) + "원으로 돈이 부족합니다. 배팅 금액 : " + this.inputPrice.get(uuid));
                                 }
-                                this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * (changedValue == 1 ? 1.5 : changedValue));
+                                this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * changedValue);
                                 player.ifPresent(value -> {
                                     value.sendTitle("§c손실", "키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃셨습니다", 20, 60, 20 );
                                     value.sendMessage("§l§c[ §f실검도박 §c] §f 키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃으셨습니다.");
@@ -203,13 +209,14 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
             if(!nowRank.contains(keyword)) {
                 ArrayList<UUID> list = this.stocks.get(keyword);
                 if (list != null) {  // :\
-                    int changedValue = Math.abs(21 - this.rank.get(keyword));
+                    int changedValueAbs = Math.abs(21 - this.rank.get(keyword));
+                    double changedValue = changedValueAbs == 1 ? 1.5 : changedValueAbs;
                     for (UUID uuid : list) {
                         Optional<Player> player = this.getServer().getPlayer(uuid);
                         if (this.economyAPI.myMoney(uuid) < this.inputPrice.get(uuid)) {
                             this.getServer().getLogger().warning(uuid.toString() + "님이 돈 " + this.economyAPI.myMoney(uuid) + "원으로 돈이 부족합니다. 배팅 금액 : " + this.inputPrice.get(uuid));
                         }
-                        this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * (changedValue == 1 ? 1.5 : changedValue));
+                        this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * changedValue);
                         player.ifPresent(value -> {
                             value.sendTitle("§c손실", "키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃셨습니다", 20, 60, 20);
                             value.sendMessage("§l§c[ §f실검도박 §c] §f 키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃으셨습니다.");
@@ -228,7 +235,10 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         if(this.isFirst){
             this.isFirst = false;
         }
-        if(this.entity.getNameTag().equals(name)) return;
+        if(!this.entity.isAlive()){
+            this.killEntity();
+            this.spawn();
+        }
         this.entity.setNameTag(name);
     }
 
@@ -256,6 +266,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
             }
         }
         this.realtimeData = realtimeData;
+        if(this.isFirst) spawn();
         this.generateEntityName();
         //this.getLogger().info(this.getKeyword(realtimeData.get(0)));
     }
@@ -316,6 +327,11 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                     player.sendMessage("§f[§c ! §f] §c해당 키워드는 더이상 사용할 수 없습니다.");
                     return;
                 }
+                if(this.rank.get(keyword) < 3){
+                    player.sendMessage("§f[§c ! §f] §c해당 키워드가 3위 이하일 때만 선택할 수 있습니다.");
+                    player.sendMessage("§f[§c ! §f] §c다른 키워드로 다시 시도해주세요.");
+                    return;
+                }
                 int price;
                 try{
                     price = Integer.parseInt(response.getInputResponse(1));
@@ -350,7 +366,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
         ArrayList<ElementButton> buttons = new ArrayList<>();
         int rank = 1;
         for(JsonElement element : this.realtimeData) {
-            if(rank == 1){
+            if(rank == 1 || rank == 2){
                 rank ++;
                 continue;
             }
