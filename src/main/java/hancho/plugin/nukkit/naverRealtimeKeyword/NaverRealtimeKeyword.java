@@ -184,7 +184,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                                 if (this.economyAPI.myMoney(uuid) < this.inputPrice.get(uuid)){
                                     this.getServer().getLogger().warning(uuid.toString() + "님이 돈 " + this.economyAPI.myMoney(uuid) + "원으로 돈이 부족합니다. 배팅 금액 : " + this.inputPrice.get(uuid));
                                 }
-                                this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * changedValue);
+                                this.economyAPI.reduceMoney(uuid, Math.min(this.inputPrice.get(uuid) * changedValue, this.economyAPI.myMoney(uuid)));
                                 player.ifPresent(value -> {
                                     value.sendTitle("§c손실", "키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃셨습니다", 20, 60, 20 );
                                     value.sendMessage("§l§c[ §f실검도박 §c] §f 키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃으셨습니다.");
@@ -216,7 +216,7 @@ public class NaverRealtimeKeyword extends PluginBase implements Listener {
                         if (this.economyAPI.myMoney(uuid) < this.inputPrice.get(uuid)) {
                             this.getServer().getLogger().warning(uuid.toString() + "님이 돈 " + this.economyAPI.myMoney(uuid) + "원으로 돈이 부족합니다. 배팅 금액 : " + this.inputPrice.get(uuid));
                         }
-                        this.economyAPI.reduceMoney(uuid, this.inputPrice.get(uuid) * changedValue);
+                        this.economyAPI.reduceMoney(uuid, Math.min(this.inputPrice.get(uuid) * changedValue, this.economyAPI.myMoney(uuid)));
                         player.ifPresent(value -> {
                             value.sendTitle("§c손실", "키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃셨습니다", 20, 60, 20);
                             value.sendMessage("§l§c[ §f실검도박 §c] §f 키워드 :§d " + keyword + "§f에서 §d-" + changedValue + "§f배로 총 §d" + (this.inputPrice.get(uuid) * changedValue) + "§f원 잃으셨습니다.");
