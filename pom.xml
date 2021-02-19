@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>hancho.plugin.nukkit.naverRealtimeKeyword</groupId>
-    <artifactId>NaverRealtimeKeyword</artifactId>
+    <groupId>hancho.plugin</groupId>
+    <artifactId>naver-realtime-keyword</artifactId>
     <version>1.0-SNAPSHOT</version>
     <repositories>
         <repository>
@@ -39,7 +39,14 @@
             <version>0.0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.18</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
+
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>
         <defaultGoal>clean install</defaultGoal>
@@ -65,5 +72,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>

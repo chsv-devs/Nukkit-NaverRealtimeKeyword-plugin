@@ -1,5 +1,5 @@
 name : NaverRealtimeKeyword
-main : hancho.plugin.nukkit.naverRealtimeKeyword.NaverRealtimeKeyword
+main : hancho.plugin.nukkit.naverrealtimekeyword.NaverRealtimeKeyword
 version: 1.0.0
 api : [1.0.0]
 author: Hancho

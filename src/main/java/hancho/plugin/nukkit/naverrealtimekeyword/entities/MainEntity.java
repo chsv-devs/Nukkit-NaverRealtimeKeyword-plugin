@@ -1,11 +1,10 @@
-package hancho.plugin.nukkit.naverRealtimeKeyword;
+package hancho.plugin.nukkit.naverrealtimekeyword.entities;
 
 import cn.nukkit.entity.Entity;
 import cn.nukkit.level.format.FullChunk;
 import cn.nukkit.nbt.tag.CompoundTag;
 
 public class MainEntity extends Entity {
-
     public MainEntity(FullChunk chunk, CompoundTag nbt) {
         super(chunk, nbt);
     }
@@ -14,6 +13,5 @@ public class MainEntity extends Entity {
     public int getNetworkId() {
         return 81;
     }
-
 
 }
